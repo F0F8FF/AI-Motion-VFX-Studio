@@ -313,6 +313,15 @@
             </div>
         </div>
 
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-title">LIVE CAMERA</div>
+            <div style="text-align:center;">
+                <img id="videoFeed" src="/video" style="width:100%;max-width:640px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);"
+                     onerror="this.style.display='none';document.getElementById('videoOff').style.display='block';">
+                <div id="videoOff" style="display:none;padding:40px;color:#555;">카메라 스트림 없음</div>
+            </div>
+        </div>
+
         <div class="grid">
             <div class="card">
                 <div class="card-title">GESTURE</div>
@@ -373,6 +382,26 @@
                         /gesture/{left,right}/{name,confidence}<br>
                         /emotion/{name,confidence,arousal,valence}<br>
                         /face/landmarks
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid" style="margin-top:20px;">
+            <div class="card" id="audioCard" style="display:none;">
+                <div class="card-title">AUDIO</div>
+                <div style="text-align:center;">
+                    <div style="display:flex;align-items:flex-end;justify-content:center;height:60px;gap:3px;" id="spectrumBars"></div>
+                    <div style="margin-top:12px;">
+                        <span style="font-size:2rem;font-weight:200;color:#00ffc8;" id="bpmValue">—</span>
+                        <span style="font-size:0.7rem;color:#444;letter-spacing:2px;"> BPM</span>
+                    </div>
+                    <div class="meter" style="margin-top:12px;">
+                        <div class="meter-label">level</div>
+                        <div class="meter-bar">
+                            <div class="meter-fill arousal" id="audioLevelBar" style="width:0%"></div>
+                        </div>
+                        <div class="meter-value" id="audioLevelVal">0.00</div>
                     </div>
                 </div>
             </div>
@@ -476,6 +505,31 @@
 
             if (state.fps !== undefined) {
                 document.getElementById('fpsValue').textContent = state.fps.toFixed(1);
+            }
+
+            if (state.audio && state.audio.spectrum && state.audio.spectrum.length > 0) {
+                const card = document.getElementById('audioCard');
+                card.style.display = '';
+                const container = document.getElementById('spectrumBars');
+                if (container.children.length === 0) {
+                    for (let i = 0; i < 16; i++) {
+                        const bar = document.createElement('div');
+                        bar.style.cssText = 'width:14px;background:#7b61ff;border-radius:2px;transition:height 0.1s;';
+                        container.appendChild(bar);
+                    }
+                }
+                state.audio.spectrum.forEach((val, i) => {
+                    if (container.children[i]) {
+                        const h = Math.max(2, val * 60);
+                        container.children[i].style.height = h + 'px';
+                        container.children[i].style.background = state.audio.beat ? '#ff6b9d' : '#7b61ff';
+                    }
+                });
+                const bpm = document.getElementById('bpmValue');
+                bpm.textContent = state.audio.bpm > 0 ? state.audio.bpm.toFixed(0) : '—';
+                const lvl = Math.max(0, Math.min(1, state.audio.level));
+                document.getElementById('audioLevelBar').style.width = (lvl * 100) + '%';
+                document.getElementById('audioLevelVal').textContent = lvl.toFixed(2);
             }
 
             prevState = state;

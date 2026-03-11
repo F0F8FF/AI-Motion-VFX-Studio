@@ -1,0 +1,16 @@
+services:
+  vfx-studio:
+    build: .
+    ports:
+      - "8000:8000"     # Web dashboard
+      - "9000:9000/udp" # OSC to TouchDesigner
+    devices:
+      - /dev/video0:/dev/video0  # Webcam (Linux)
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      python main.py
+      --dashboard
+      --osc-host host.docker.internal
+      --osc-port 9000
+    restart: unless-stopped

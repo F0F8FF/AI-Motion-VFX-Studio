@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.github/
+data/sessions/
+data/gesture_data.json
+data/gesture_model.pt
+*.egg-info/
+.pytest_cache/
+.DS_Store

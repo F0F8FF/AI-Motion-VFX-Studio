@@ -1,6 +1,6 @@
 """
 FastAPI 실시간 대시보드.
-WebSocket으로 AI 파이프라인 상태를 브라우저에 스트리밍한다.
+WebSocket으로 AI 상태 + MJPEG로 웹캠 영상을 브라우저에 스트리밍한다.
 """
 
 from __future__ import annotations
@@ -10,8 +10,9 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import cv2
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 if TYPE_CHECKING:
@@ -45,6 +46,7 @@ def create_app(pipeline: MotionVFXPipeline) -> FastAPI:
                 "gesture": cfg.ai.gesture_enabled,
                 "emotion": cfg.ai.emotion_enabled,
             },
+            "audio": {"enabled": cfg.audio.enabled},
         }
 
     @app.websocket("/ws")
@@ -54,8 +56,28 @@ def create_app(pipeline: MotionVFXPipeline) -> FastAPI:
             while True:
                 state = pipeline.latest_state
                 await websocket.send_text(json.dumps(state))
-                await asyncio.sleep(0.05)  # 20 FPS로 상태 전송
+                await asyncio.sleep(0.05)
         except WebSocketDisconnect:
             pass
 
+    @app.get("/video")
+    async def video_feed():
+        """MJPEG 스트리밍 — 랜드마크 오버레이 포함 웹캠 영상."""
+        return StreamingResponse(
+            _generate_mjpeg(pipeline),
+            media_type="multipart/x-mixed-replace; boundary=frame",
+        )
+
     return app
+
+
+async def _generate_mjpeg(pipeline: MotionVFXPipeline):
+    while True:
+        frame = pipeline.latest_frame
+        if frame is not None:
+            _, jpeg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n"
+            )
+        await asyncio.sleep(0.05)
