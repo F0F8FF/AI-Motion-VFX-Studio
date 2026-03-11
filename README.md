@@ -17,15 +17,6 @@
 
 웹캠 영상에서 **포즈·손·얼굴을 AI로 실시간 추적**하고, 분석 결과를 **OSC 프로토콜**로 TouchDesigner에 전송하여 인터랙티브 VFX를 생성하는 파이프라인입니다.
 
-## Demo
-
-> **스크린샷/GIF를 여기에 추가하세요.**
->
-> 촬영 팁: OBS로 화면 녹화 → [ezgif.com](https://ezgif.com/video-to-gif)에서 GIF 변환 → `docs/` 폴더에 저장
->
-> ```markdown
-> ![demo](docs/demo.gif)
-> ```
 
 ## Architecture
 
